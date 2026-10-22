@@ -15,5 +15,6 @@ for(let face of ORDER)for(let suffix of ['',"'",'2']){const move=face+suffix,{ax
 Cube.initSolver();for(let i=0;i<12;i++){const c=i===0?scramble.clone():Cube.random();assert.equal(validate(c.asString(),Cube).ok,true);const solution=c.solve();assert.equal(c.clone().move(solution).isSolved(),true);} 
 const raw={U:[242,243,234],R:[204,28,26],F:[23,160,67],D:[238,215,32],L:[245,115,26],B:[25,76,184]};for(let f of ORDER)assert.equal(classify(raw[f]).color,f);
 const state=scramble.asString(),samples=Object.fromEntries(ORDER.map((f,idx)=>[f,{rgbs:state.slice(idx*9,idx*9+9).split('').map(k=>raw[k])}]));assert.deepEqual(calibrate(samples).faces,fromString(state));
+const misaligned={...samples,F:{...samples.F,uniform:samples.F.rgbs.map((_,i)=>i!==2)}};assert.deepEqual(calibrate(misaligned).uncertain.F,[2],'calibration keeps misaligned cells flagged');
 let face=[1,2,3,4,5,6,7,8,9];for(let n=0;n<4;n++)face=rotateFace(face);assert.deepEqual(face,[1,2,3,4,5,6,7,8,9]);
 console.log('PASS: 12 complete solves, 18 visual move mappings, invalid pieces/edge flip/corner twist/parity, six-color sampling, calibration, face rotation.');

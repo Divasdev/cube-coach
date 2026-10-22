@@ -1,12 +1,14 @@
 import assert from 'node:assert/strict';
 import {Scanner} from '../dist/camera.mjs';
 const color={U:[242,243,234],R:[204,28,26],F:[23,160,67],D:[238,215,32],L:[245,115,26],B:[25,76,184]};
-let grid='DBFBFULUL'.split(''),captures=[],readings=[];
-const context={getImageData(x,y,w,h){let c=Math.max(0,Math.min(2,Math.floor((x+w/2-90)/140))),r=Math.max(0,Math.min(2,Math.floor((y+h/2-90)/140))),rgb=color[grid[r*3+c]],data=new Uint8ClampedArray(w*h*4);for(let i=0;i<data.length;i+=4)data.set([...rgb,255],i);return {data};}};
+let grid='DBFBFULUL'.split(''),captures=[],readings=[],split=-1;
+// `split` puts one cell's sample across a sticker edge: half white, half the sticker color.
+const context={getImageData(x,y,w,h){let c=Math.max(0,Math.min(2,Math.floor((x+w/2-90)/140))),r=Math.max(0,Math.min(2,Math.floor((y+h/2-90)/140))),rgb=color[grid[r*3+c]],data=new Uint8ClampedArray(w*h*4);for(let i=0;i<data.length;i+=4)data.set([...(split===r*3+c&&i<data.length/2?color.U:rgb),255],i);return {data};}};
 const canvas={getContext:()=>context,addEventListener(){},toDataURL:()=>'',width:600,height:600};
 let sc=new Scanner({canvas,video:{},onReading:r=>readings.push(r),onCapture:r=>captures.push(r),onError:e=>{throw new Error(e)}});sc.face='F';for(let t=100;t<=2100;t+=100)sc.analyze(t);assert.equal(captures.length,1);assert.equal(captures[0].colors.join(''),'DBFBFULUL');
 sc.setFace('R');let t=sc.frozenUntil+1;for(let i=0;i<25;i++)sc.analyze(t+i*100);assert.equal(captures.length,1,'same face must not recapture as another face');
 grid='UBRRRRDRF'.split('');for(let i=0;i<25;i++)sc.analyze(t+3000+i*100);assert.equal(captures.length,2);assert.equal(captures[1].colors.join(''),'UBRRRRDRF');
-sc.auto=false;grid='BRRFBFUFB'.split('');sc.setFace('B');t=sc.frozenUntil+1;for(let i=0;i<25;i++)sc.analyze(t+i*100);assert.equal(captures.length,2,'auto off must not capture');sc.capture();assert.equal(captures.length,3);
+sc.auto=false;grid='BRRFBFUFB'.split('');sc.setFace('B');t=sc.frozenUntil+1;for(let i=0;i<25;i++)sc.analyze(t+i*100);assert.equal(captures.length,2,'auto off must not capture');sc.capture();assert.equal(captures.length,3);assert.deepEqual(captures[2].uniform,Array(9).fill(true),'aligned capture reports every cell as uniform');
+sc.auto=true;split=0;t+=5000;for(let i=0;i<25;i++)sc.analyze(t+i*100);assert.equal(captures.length,3,'a cell across two stickers must block auto-capture');sc.capture();assert.equal(captures[3].uniform[0],false,'manual capture reports the misaligned cell');assert.ok(captures[3].uniform.slice(1).every(Boolean));split=-1;
 let draws=0;sc.active=true;sc.mode='camera';sc.video={readyState:2,videoWidth:600,currentTime:1,requestVideoFrameCallback:()=>1};sc.drawSource=()=>draws++;sc.lastTick=-10000;sc.frame();sc.lastTick=-10000;sc.frame();assert.equal(draws,1,'frozen video time must not advance scan');
 console.log('PASS: steady auto-capture, duplicate-face prevention, manual capture, frozen-frame prevention.');

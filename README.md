@@ -26,7 +26,9 @@ The scanner samples a precisely aligned guide; it does not detect a freely movin
 
 `node tests/verify.mjs`: twelve random/demo complete solves, all 18 visual turn transforms against solver facelets, impossible states, six-color sampling, center calibration, rotation.
 
-`node tests/camera.mjs`: synthetic steady-frame capture, duplicate-face blocking, manual capture, and frozen-frame prevention.
+`node tests/camera.mjs`: synthetic steady-frame capture, duplicate-face blocking, manual capture, frozen-frame prevention, and reporting a guide dot that sits across two stickers.
+
+`node tests/flows.mjs`: runs the real app against a small stand-in DOM and fake camera. After the demo or a finished solve, a new scan starts at 0 of 6 and one scanned face stays at 1 of 6. Also covers six-face capture, Retake and Back to scanning keeping faces, Try my cube, the demo solve, and misaligned stickers staying flagged in review.
 
 Browser checks cover demo-to-solution flow, one animated turn, solution completion, lesson navigation, mobile overflow, and WebMCP valid/invalid state operations. Hardware camera capture is not part of the automated tests.
 
